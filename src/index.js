@@ -23,7 +23,10 @@ function onSearchInput() {
   if (searchValue) {
     fetchCountries(searchValue)
       .then(resultLengthCheck)
-      .catch(error => console.log(error));
+      .catch(error => {
+        Notify.failure('Oops, there is no country with that name');
+        clearSearchResult();
+      });
   }
 
   if (searchValue.length === 0) {
@@ -52,13 +55,16 @@ function resultLengthCheck(countryArray) {
 
 function buildCountryInfoMarkup(country) {
 
-  const countryInfoMarkup = `<h2><img src=${country.flags.svg} alt="flag of ${
+  const countryInfoMarkup = `<h2 class="country-title"><img src=${country.flags.svg} alt="flag of ${
     country.name.official
-  } class="flag-icon flag-icon-large" width="42" /> ${
+  } class="flag-icon flag-icon-large" width="100" /> ${
     country.name.official
-  }</h2><p><b>Capital: </b>${country.capital}</p><p><b>Population: </b>${
+    }</h2>
+  <p class="capital"><b>Capital: </b>${country.capital}</p>
+  <p class="population"><b>Population: </b>${
     country.population
-    }</p><p><b>Languages: </b>${Object.values(country.languages).join(', ')}</p >`;
+    }</p>
+    <p class="languages"><b>Languages: </b>${Object.values(country.languages).join(', ')}</p >`;
   
   
   refs.countryInfo.innerHTML = countryInfoMarkup;
@@ -68,7 +74,7 @@ function buildCountryInfoMarkup(country) {
 function buildCountryArrayMarkup(countryArray) {
   const countryListMarkup = countryArray.map(({ flags: { svg }, name: { official } }) => {
     return `<li class="list-item">
-      <img src="${svg}" alt="${official} flag" width="30" height="25"/>
+      <img class="mini-icon" src="${svg}" alt="${official} flag" width="45" height="30"/>
       ${official}
     </li>`
   }).join('');
