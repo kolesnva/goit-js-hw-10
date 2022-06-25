@@ -7,32 +7,32 @@ import { fetchCountries } from './fetchCountries';
 
 const DEBOUNCE_DELAY = 300;
 
-function onSearchInput(event) {
-  const searchValue = event.target.value.trim().toLowerCase();
+const refs = {
+  searchInput: document.querySelector('#search-box'),
+  countryList: document.querySelector('.country-list'),
+  countryInfo: document.querySelector('.country-info'),
+}
+
+refs.searchInput.addEventListener('input', debounce(onSearchInput, DEBOUNCE_DELAY));
+
+function onSearchInput() {
+  const searchValue = refs.searchInput.value.trim().toLowerCase();
+
   console.log(searchValue);
+
   if (searchValue) {
     fetchCountries(searchValue)
-      .then(result => displaySearchResult(result))
+      .then(resultLengthCheck)
       .catch(error => console.log(error));
+  }
+
+  if (searchValue.length === 0) {
+    clearSearchResult();
   }
 };
 
-const refs = {};
-
-window.addEventListener('load', () => {
-  refs.searchInput = document.querySelector('#search-box'),
-  refs.countryList = document.querySelector('.country-list'),
-  refs.countryInfo = document.querySelector('country-info'),
-  refs.searchInput.addEventListener('input', debounce(onSearchInput, DEBOUNCE_DELAY))
-})
-
-function displaySearchResult(countryArray) {
-  console.log(countryArray, countryArray.length);
-
-  if (countryArray.length === 0) {
-    Notify.failure('Oops, there is no country with that name');
-    return;
-  }
+function resultLengthCheck(countryArray) {
+  console.log(countryArray);
 
   if (countryArray.length > 10) {
     Notify.info('Too many matches found. Please enter a more specific name.');
@@ -40,35 +40,45 @@ function displaySearchResult(countryArray) {
   }
 
   if (countryArray.length === 1) {
-    makeCountryInfoMarkup(countryArray[0]);
+    buildCountryInfoMarkup(countryArray[0]);
+    refs.countryList.innerHTML = '';
+    return;
+  } else {
+    buildCountryArrayMarkup(countryArray);
+    refs.countryInfo.innerHTML = '';
     return;
   }
+};
 
-  makeCountryArrayMarkup(countryArray);
-}
+function buildCountryInfoMarkup(country) {
 
-function makeCountryInfoMarkup(country) {
-  refs.countryList.innerHTML = '';
-  refs.countryInfo.innerHTML = `<h2><img src=${country.flags.svg} alt="flag of ${
+  const countryInfoMarkup = `<h2><img src=${country.flags.svg} alt="flag of ${
     country.name.official
   } class="flag-icon flag-icon-large" width="42" /> ${
     country.name.official
   }</h2><p><b>Capital: </b>${country.capital}</p><p><b>Population: </b>${
     country.population
-  }</p><p><b>Languages: </b>${Object.values(country.languages).join(', ')}</p >`
+    }</p><p><b>Languages: </b>${Object.values(country.languages).join(', ')}</p >`;
+  
+  
+  refs.countryInfo.innerHTML = countryInfoMarkup;
+  
 };
 
-function makeCountryArrayMarkup(countryArray) {
-  const markup = countryArray.map(country => {
-    const countryItem = document.createElement('li');
-    countryItem.innerHTML = `<img src=${country.flags.svg} class="flag-icon" width="32" alt="flag of ${country.name.official}" /> ${country.name.official}`;
-
-    return countryItem;
-  });
+function buildCountryArrayMarkup(countryArray) {
+  const countryListMarkup = countryArray.map(({ flags: { svg }, name: { official } }) => {
+    return `<li class="list-item">
+      <img src="${svg}" alt="${official} flag" width="30" height="25"/>
+      ${official}
+    </li>`
+  }).join('');
+  refs.countryList.innerHTML = countryListMarkup;
+}
+  
+function clearSearchResult() {
   refs.countryInfo.innerHTML = '';
   refs.countryList.innerHTML = '';
-  refs.countryList.append(...markup);
-};
+}
 
 
 
